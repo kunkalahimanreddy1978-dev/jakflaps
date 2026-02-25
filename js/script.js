@@ -16,32 +16,26 @@ function resizeCanvas() {
   }
 }
 
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+function resizeCanvas() {
+  const ratio = 0.6; // Aspect ratio (width / height)
+  let w = window.innerWidth;
+  let h = window.innerHeight;
 
-// ================= GLOBAL SETTINGS =================
+  // Fit the game to the screen while maintaining the 0.6 ratio
+  if (w / h > ratio) {
+    canvas.height = h;
+    canvas.width = h * ratio;
+  } else {
+    canvas.width = w;
+    canvas.height = w / ratio;
+  }
 
-let gameState = "start";
-
-let pipeSpeed = 1.5;
-let gap = 250;           // vertical gap
-let pipeSpacing = 300;     // horizontal spacing
-
-let pipes = [];
-let frame = 0;
-let score = 0;
-let highScore = localStorage.getItem("flappyHighScore") || 0;
-
-let gameOverScale = 0;
-let bounceBack = false;
-let gameOverPlayed = false;
-
-let retryButton = {
-  x: 0,
-  y: 0,
-  width: 160,
-  height: 45
-};
+  // Update dynamic sizes based on new canvas height
+  // This ensures the gap and bird size feel the same on an iPhone or a Tablet
+  bird.width = canvas.height * 0.07;  // Bird is 7% of screen height
+  bird.height = bird.width;
+  gap = canvas.height * 0.22;        // Gap is 22% of screen height
+}
 
 // ================= LOAD IMAGES =================
 
@@ -87,14 +81,27 @@ function resetGame() {
 
 // ================= DRAW BIRD =================
 
+
 function drawBird() {
+  ctx.save(); // Save the current canvas state
+  
+  // Move the "center" of the canvas to the bird's position for rotation
+  ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+  
+  // Calculate rotation: velocity * 0.1 is a good ratio (clamped between -25 and 90 degrees)
+  let rotation = Math.min(Math.PI / 2, Math.max(-Math.PI / 4, bird.velocity * 0.1));
+  ctx.rotate(rotation);
+
+  // Draw the bird centered at (0,0) because we translated the canvas
   ctx.drawImage(
     birdImg,
-    bird.x,
-    bird.y,
+    -bird.width / 2,
+    -bird.height / 2,
     bird.width,
     bird.height
   );
+
+  ctx.restore(); // Restore the canvas so other elements don't tilt
 }
 
 // ================= UPDATE BIRD =================
@@ -348,21 +355,24 @@ function handleInput(event) {
   }
 }
 
-// Desktop
+// 1. Keyboard (Spacebar)
 document.addEventListener("keydown", function (e) {
   if (e.code === "Space") {
     handleInput();
   }
 });
 
-// Click
-canvas.addEventListener("click", function (e) {
+// 2. Mouse Click (Desktop)
+// Using 'mousedown' is often more responsive than 'click'
+canvas.addEventListener("mousedown", function (e) {
   handleInput(e);
 });
 
-// Mobile
-canvas.addEventListener("touchstart", function () {
+// 3. Mobile Touch (The fix for "Ghost Clicks")
+canvas.addEventListener("touchstart", function (e) {
+  // This is the crucial part: it stops the 'mousedown/click' 
+  // from firing immediately after the touch.
+  e.preventDefault(); 
   handleInput();
-});
-
+}, { passive: false });
 gameLoop();
