@@ -1,41 +1,9 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-function resizeCanvas() {
-  let screenWidth = window.innerWidth;
-  let screenHeight = window.innerHeight;
 
-  // Make it tall like mobile game
-  canvas.height = screenHeight;
-  canvas.width = screenHeight * 0.6;
 
-  // If width becomes bigger than screen, adjust
-  if (canvas.width > screenWidth) {
-    canvas.width = screenWidth;
-    canvas.height = screenWidth / 0.6;
-  }
-}
 
-function resizeCanvas() {
-  const ratio = 0.6; // Aspect ratio (width / height)
-  let w = window.innerWidth;
-  let h = window.innerHeight;
-
-  // Fit the game to the screen while maintaining the 0.6 ratio
-  if (w / h > ratio) {
-    canvas.height = h;
-    canvas.width = h * ratio;
-  } else {
-    canvas.width = w;
-    canvas.height = w / ratio;
-  }
-
-  // Update dynamic sizes based on new canvas height
-  // This ensures the gap and bird size feel the same on an iPhone or a Tablet
-  bird.width = canvas.height * 0.07;  // Bird is 7% of screen height
-  bird.height = bird.width;
-  gap = canvas.height * 0.22;        // Gap is 22% of screen height
-}
 
 // ================= LOAD IMAGES =================
 
@@ -64,6 +32,27 @@ let bird = {
   lift: -4,
   velocity: 0
 };
+
+function resizeCanvas() {
+  const ratio = 0.6; // Aspect ratio (width / height)
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+
+  // Fit the game to the screen while maintaining the 0.6 ratio
+  if (w / h > ratio) {
+    canvas.height = h;
+    canvas.width = h * ratio;
+  } else {
+    canvas.width = w;
+    canvas.height = w / ratio;
+  }
+
+  // Update dynamic sizes based on new canvas height
+  // This ensures the gap and bird size feel the same on an iPhone or a Tablet
+  bird.width = canvas.height * 0.07;  // Bird is 7% of screen height
+  bird.height = bird.width;
+  gap = canvas.height * 0.22;        // Gap is 22% of screen height
+}
 
 // ================= RESET GAME =================
 
@@ -122,17 +111,19 @@ function updateBird() {
 // ================= CREATE PIPE =================
 
 function createPipe() {
-  let topHeight = Math.random() * 300 + 50;
+  // Ensure pipe doesn't take up the whole screen
+  let minPipeHeight = 50;
+  let maxPipeHeight = canvas.height - gap - minPipeHeight;
+  let topHeight = Math.random() * (maxPipeHeight - minPipeHeight) + minPipeHeight;
 
   pipes.push({
     x: canvas.width,
-    width: 100,
+    width: canvas.width * 0.18,
     top: topHeight,
     bottom: canvas.height - topHeight - gap,
     passed: false
   });
 }
-
 // ================= DRAW PIPES =================
 
 function drawPipes() {
