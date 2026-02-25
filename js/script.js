@@ -56,8 +56,8 @@ pipeImg.src = "images/pipe.jpeg";   // change name if different
 
 // ================= LOAD SOUND =================
 
-const jumpSound = new Audio("jump.mp3");
-const gameOverSound = new Audio("gameover.mp3");
+const jumpSound = new Audio("sounds/jump.mp3");
+const gameOverSound = new Audio("sounds/gameover.mp3");
 
 // ================= BIRD =================
 
