@@ -46,13 +46,13 @@ let retryButton = {
 // ================= LOAD IMAGES =================
 
 const birdImg = new Image();
-birdImg.src = "bird.jpeg";
+birdImg.src = "images/bird.jpeg";
 
 const gameOverImg = new Image();
-gameOverImg.src = "gameover.jpeg";
+gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "pipe.jpeg";   // change name if different
+pipeImg.src = "images/pipe.jpeg";   // change name if different
 
 // ================= LOAD SOUND =================
 
