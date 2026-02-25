@@ -1,12 +1,22 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// ================= GLOBAL SETTINGS (Missing in your last snippet) =================
+let gameState = "start";
+let pipeSpeed = 1.5;
+let pipes = [];
+let frame = 0;
+let score = 0;
+let highScore = localStorage.getItem("flappyHighScore") || 0;
+let gap, pipeSpacing; // These get set in resizeCanvas()
 
+let gameOverScale = 0;
+let bounceBack = false;
+let gameOverPlayed = false;
 
-
+let retryButton = { x: 0, y: 0, width: 160, height: 45 };
 
 // ================= LOAD IMAGES =================
-
 const birdImg = new Image();
 birdImg.src = "images/bird.jpeg";
 
@@ -14,15 +24,13 @@ const gameOverImg = new Image();
 gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "images/pipe.jpeg";   // change name if different
+pipeImg.src = "images/pipe.jpeg";
 
 // ================= LOAD SOUND =================
-
 const jumpSound = new Audio("sounds/jump.mp3");
 const gameOverSound = new Audio("sounds/gameover.mp3");
 
 // ================= BIRD =================
-
 let bird = {
   x: 80,
   y: 300,
@@ -33,12 +41,12 @@ let bird = {
   velocity: 0
 };
 
+// ================= RESIZE LOGIC =================
 function resizeCanvas() {
-  const ratio = 0.6; // Aspect ratio (width / height)
+  const ratio = 0.6;
   let w = window.innerWidth;
   let h = window.innerHeight;
 
-  // Fit the game to the screen while maintaining the 0.6 ratio
   if (w / h > ratio) {
     canvas.height = h;
     canvas.width = h * ratio;
@@ -47,71 +55,48 @@ function resizeCanvas() {
     canvas.height = w / ratio;
   }
 
-  // Update dynamic sizes based on new canvas height
-  // This ensures the gap and bird size feel the same on an iPhone or a Tablet
-  bird.width = canvas.height * 0.07;  // Bird is 7% of screen height
+  // Set dynamic sizes after canvas is sized
+  bird.width = canvas.height * 0.07;
   bird.height = bird.width;
-  gap = canvas.height * 0.22;        // Gap is 22% of screen height
+  gap = canvas.height * 0.22;
+  pipeSpacing = canvas.width * 0.8;
 }
 
-// ================= RESET GAME =================
+// CALL THIS IMMEDIATELY
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
+// ================= RESET GAME =================
 function resetGame() {
   bird.y = 300;
   bird.velocity = 0;
   pipes = [];
   frame = 0;
   score = 0;
-  pipeSpeed = 1.0;
+  pipeSpeed = 1.5;
   gameOverScale = 0;
   bounceBack = false;
   gameOverPlayed = false;
 }
 
-// ================= DRAW BIRD =================
-
-
+// ================= DRAWING FUNCTIONS =================
 function drawBird() {
-  ctx.save(); // Save the current canvas state
-  
-  // Move the "center" of the canvas to the bird's position for rotation
+  ctx.save();
   ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
-  
-  // Calculate rotation: velocity * 0.1 is a good ratio (clamped between -25 and 90 degrees)
   let rotation = Math.min(Math.PI / 2, Math.max(-Math.PI / 4, bird.velocity * 0.1));
   ctx.rotate(rotation);
-
-  // Draw the bird centered at (0,0) because we translated the canvas
-  ctx.drawImage(
-    birdImg,
-    -bird.width / 2,
-    -bird.height / 2,
-    bird.width,
-    bird.height
-  );
-
-  ctx.restore(); // Restore the canvas so other elements don't tilt
+  ctx.drawImage(birdImg, -bird.width / 2, -bird.height / 2, bird.width, bird.height);
+  ctx.restore();
 }
-
-// ================= UPDATE BIRD =================
 
 function updateBird() {
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
-
-  if (bird.y + bird.height > canvas.height) {
-    gameState = "gameover";
-  }
-
-  if (bird.y < 0) {
-    bird.y = 0;
-  }
+  if (bird.y + bird.height > canvas.height) gameState = "gameover";
+  if (bird.y < 0) bird.y = 0;
 }
 
-// ================= CREATE PIPE =================
-
 function createPipe() {
-  // Ensure pipe doesn't take up the whole screen
   let minPipeHeight = 50;
   let maxPipeHeight = canvas.height - gap - minPipeHeight;
   let topHeight = Math.random() * (maxPipeHeight - minPipeHeight) + minPipeHeight;
@@ -124,40 +109,17 @@ function createPipe() {
     passed: false
   });
 }
-// ================= DRAW PIPES =================
 
 function drawPipes() {
-
   pipes.forEach(pipe => {
+    ctx.drawImage(pipeImg, pipe.x, 0, pipe.width, pipe.top);
+    ctx.drawImage(pipeImg, pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
 
-    // ===== TOP PIPE =====
-    ctx.drawImage(
-      pipeImg,
-      pipe.x,
-      0,
-      pipe.width,
-      pipe.top
-    );
-
-    // ===== BOTTOM PIPE =====
-    ctx.drawImage(
-      pipeImg,
-      pipe.x,
-      canvas.height - pipe.bottom,
-      pipe.width,
-      pipe.bottom
-    );
-
-    // Move pipe
     pipe.x -= pipeSpeed;
 
-    // Collision detection
-    if (
-      bird.x < pipe.x + pipe.width &&
-      bird.x + bird.width > pipe.x &&
-      (bird.y < pipe.top ||
-       bird.y + bird.height > canvas.height - pipe.bottom)
-    ) {
+    // Collision
+    if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x &&
+       (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) {
       gameState = "gameover";
     }
 
@@ -166,40 +128,34 @@ function drawPipes() {
       score++;
       pipe.passed = true;
     }
-
   });
+  // Cleanup pipes
+  pipes = pipes.filter(p => p.x + p.width > 0);
 }
-
-// ================= DRAW SCORE =================
 
 function drawScore() {
   ctx.fillStyle = "black";
-  ctx.font = "22px Arial";
+  ctx.font = "bold 22px Arial";
   ctx.textAlign = "left";
-  ctx.fillText("Score: " + score, 20, 30);
-  ctx.fillText("High: " + highScore, 20, 60);
+  ctx.fillText("Score: " + score, 20, 40);
+  ctx.fillText("High: " + highScore, 20, 70);
 }
-
-// ================= START SCREEN =================
 
 function drawStartScreen() {
   ctx.fillStyle = "black";
-  ctx.font = "36px Arial";
+  ctx.font = "bold 36px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("Flappy-Jak", canvas.width / 2, 250);
-
+  ctx.fillText("Flappy-Jak", canvas.width / 2, canvas.height / 3);
   ctx.font = "18px Arial";
-  ctx.fillText("Press Space or Tap to Start", canvas.width / 2, 300);
+  ctx.fillText("Press Space or Tap to Start", canvas.width / 2, canvas.height / 2);
 }
-
-// ================= GAME OVER SCREEN =================
 
 function drawGameOver() {
-if (!gameOverPlayed) {
-  gameOverSound.currentTime = 0;
-  gameOverSound.play();
-  gameOverPlayed = true;
-}
+  if (!gameOverPlayed) {
+    gameOverSound.currentTime = 0;
+    gameOverSound.play();
+    gameOverPlayed = true;
+  }
   if (score > highScore) {
     highScore = score;
     localStorage.setItem("flappyHighScore", highScore);
@@ -208,7 +164,6 @@ if (!gameOverPlayed) {
   ctx.fillStyle = "rgba(0,0,0,0.65)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Zoom + Bounce
   if (!bounceBack) {
     gameOverScale += 0.08;
     if (gameOverScale >= 1.1) bounceBack = true;
@@ -217,128 +172,65 @@ if (!gameOverPlayed) {
     if (gameOverScale <= 1) gameOverScale = 1;
   }
 
-  let popupWidth = 320 * gameOverScale;
-  let popupHeight = 220 * gameOverScale;
-
+  let popupWidth = canvas.width * 0.8 * gameOverScale;
+  let popupHeight = popupWidth * 0.7;
   let popupX = canvas.width / 2 - popupWidth / 2;
   let popupY = canvas.height / 2 - popupHeight / 2;
 
-  // TEXT ABOVE IMAGE
-  ctx.shadowColor = "yellow";
-  ctx.shadowBlur = 20;
+  ctx.drawImage(gameOverImg, popupX, popupY, popupWidth, popupHeight);
+
   ctx.fillStyle = "white";
-  ctx.font = "bold 34px Arial";
+  ctx.font = "bold 24px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("GAME OVER", canvas.width / 2, popupY - 50);
-  ctx.shadowBlur = 0;
-
-  ctx.fillStyle = "#ff4444";
-  ctx.font = "20px Arial";
-  ctx.fillText("hehehe inka pakkaki po", canvas.width / 2, popupY - 20);
-
-  // IMAGE
-  ctx.drawImage(
-    gameOverImg,
-    popupX,
-    popupY,
-    popupWidth,
-    popupHeight
-  );
-
-  // SCORE BELOW IMAGE
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, canvas.width / 2, popupY + popupHeight + 30);
-  ctx.fillText("High: " + highScore, canvas.width / 2, popupY + popupHeight + 60);
-
-  // RETRY BUTTON
-  retryButton.x = canvas.width / 2 - retryButton.width / 2;
-  retryButton.y = popupY + popupHeight + 80;
-
+  ctx.fillText("GAME OVER", canvas.width / 2, popupY - 30);
+  
   ctx.fillStyle = "#ffcc00";
-  ctx.fillRect(
-    retryButton.x,
-    retryButton.y,
-    retryButton.width,
-    retryButton.height
-  );
-
+  retryButton.x = canvas.width / 2 - retryButton.width / 2;
+  retryButton.y = popupY + popupHeight + 20;
+  ctx.fillRect(retryButton.x, retryButton.y, retryButton.width, retryButton.height);
   ctx.fillStyle = "black";
-  ctx.font = "bold 18px Arial";
-  ctx.fillText("RETRY", canvas.width / 2, retryButton.y + 28);
+  ctx.fillText("RETRY", canvas.width / 2, retryButton.y + 30);
 }
 
 // ================= MAIN LOOP =================
-
 function gameLoop() {
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (gameState === "start") {
     drawStartScreen();
-  }
-
-  if (gameState === "playing") {
-
-    // Fixed horizontal spacing
-    if (pipes.length === 0) {
+  } else if (gameState === "playing") {
+    if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - pipeSpacing) {
       createPipe();
-    } else {
-      let lastPipe = pipes[pipes.length - 1];
-      if (lastPipe.x < canvas.width - pipeSpacing) {
-        createPipe();
-      }
     }
-
-    // Difficulty increases only speed
-    if (frame % 280==0 && frame !== 0) {
-      pipeSpeed += 0.1;
-    }
-
+    if (frame % 280 === 0 && frame !== 0) pipeSpeed += 0.1;
     updateBird();
-    drawBird();
     drawPipes();
+    drawBird();
     drawScore();
-
     frame++;
-  }
-
-  if (gameState === "gameover") {
-    drawBird();
+  } else if (gameState === "gameover") {
     drawPipes();
-    drawScore();
+    drawBird();
     drawGameOver();
   }
-
   requestAnimationFrame(gameLoop);
 }
 
-// ================= INPUT =================
-
+// ================= INPUTS =================
 function handleInput(event) {
-
   if (gameState === "start") {
     gameState = "playing";
-  }
-  else if (gameState === "playing") {
-
+  } else if (gameState === "playing") {
     bird.velocity = bird.lift;
-
     jumpSound.currentTime = 0;
     jumpSound.play();
-  }
-  else if (gameState === "gameover") {
-
+  } else if (gameState === "gameover") {
     if (event) {
-      let mouseX = event.offsetX;
-      let mouseY = event.offsetY;
-
-      if (
-        mouseX > retryButton.x &&
-        mouseX < retryButton.x + retryButton.width &&
-        mouseY > retryButton.y &&
-        mouseY < retryButton.y + retryButton.height
-      ) {
+      let rect = canvas.getBoundingClientRect();
+      let mouseX = event.clientX - rect.left;
+      let mouseY = event.clientY - rect.top;
+      if (mouseX > retryButton.x && mouseX < retryButton.x + retryButton.width &&
+          mouseY > retryButton.y && mouseY < retryButton.y + retryButton.height) {
         resetGame();
         gameState = "start";
       }
@@ -346,24 +238,8 @@ function handleInput(event) {
   }
 }
 
-// 1. Keyboard (Spacebar)
-document.addEventListener("keydown", function (e) {
-  if (e.code === "Space") {
-    handleInput();
-  }
-});
+document.addEventListener("keydown", (e) => { if (e.code === "Space") handleInput(); });
+canvas.addEventListener("mousedown", (e) => { handleInput(e); });
+canvas.addEventListener("touchstart", (e) => { e.preventDefault(); handleInput(); }, { passive: false });
 
-// 2. Mouse Click (Desktop)
-// Using 'mousedown' is often more responsive than 'click'
-canvas.addEventListener("mousedown", function (e) {
-  handleInput(e);
-});
-
-// 3. Mobile Touch (The fix for "Ghost Clicks")
-canvas.addEventListener("touchstart", function (e) {
-  // This is the crucial part: it stops the 'mousedown/click' 
-  // from firing immediately after the touch.
-  e.preventDefault(); 
-  handleInput();
-}, { passive: false });
 gameLoop();
