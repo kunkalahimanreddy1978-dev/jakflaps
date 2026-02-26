@@ -23,7 +23,7 @@ body {
 }
 
 canvas {
-    background-color: rgb(3, 0, 59);
+    background-color: rgb(75, 72, 132);
     display: block;
     box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Makes the game edge look cleaner */
 }
