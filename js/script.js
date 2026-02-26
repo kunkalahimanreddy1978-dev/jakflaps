@@ -124,22 +124,26 @@ function drawPipes() {
     ctx.fillStyle = "black";
 
     // --- TOP PIPE ---
-    // Draw solid black part
+    // Start at 0, draw down to pipe.top
     ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
-    // Draw square image at the BOTTOM of the top pipe
+    // Draw square cap at the very bottom edge of this top section
     ctx.drawImage(pipeImg, pipe.x, pipe.top - pipe.width, pipe.width, pipe.width);
 
     // --- BOTTOM PIPE ---
-    // Draw solid black part
-    ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
-    // Draw square image at the TOP of the bottom pipe
-    ctx.drawImage(pipeImg, pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.width);
+    let bottomStartY = pipe.top + gap; // The Y coordinate where the bottom pipe starts
+    let bottomHeight = canvas.height - bottomStartY; // Distance from start to the absolute bottom
+
+    // Draw solid black from start point to the bottom of the canvas
+    ctx.fillRect(pipe.x, bottomStartY, pipe.width, bottomHeight);
+    
+    // Draw square cap at the very top edge of this bottom section
+    ctx.drawImage(pipeImg, pipe.x, bottomStartY, pipe.width, pipe.width);
 
     if (gameState === "playing") pipe.x -= pipeSpeed;
 
-    // Collision
+    // Collision (Updated to be more precise)
     if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x &&
-       (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) {
+       (bird.y < pipe.top || bird.y + bird.height > bottomStartY)) {
       gameState = "gameover";
     }
 
@@ -151,7 +155,6 @@ function drawPipes() {
   });
   pipes = pipes.filter(p => p.x + p.width > 0);
 }
-
 function drawScore() {
   ctx.fillStyle = "black";
   ctx.font = `bold ${canvas.height * 0.03}px Arial`;
