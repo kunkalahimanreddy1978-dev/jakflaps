@@ -24,7 +24,7 @@ const gameOverImg = new Image();
 gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "images/pipeimge.jpeg";
+pipeImg.src = "images/pipe.jpeg";
 
 // ================= LOAD SOUND =================
 const jumpSound = new Audio("sounds/jump.mp3");
@@ -55,7 +55,6 @@ function resizeCanvas() {
     canvas.height = w / ratio;
   }
 
-  // Set dynamic sizes relative to screen height
   bird.width = canvas.height * 0.07;
   bird.height = bird.width;
   bird.x = canvas.width * 0.15; 
@@ -63,7 +62,6 @@ function resizeCanvas() {
   gap = canvas.height * 0.24;
   pipeSpacing = canvas.width * 0.75;
 
-  // Make button large enough for thumbs
   retryButton.width = canvas.width * 0.5;
   retryButton.height = 55;
 
@@ -121,33 +119,36 @@ function createPipe() {
   });
 }
 
-
-
 function drawPipes() {
   pipes.forEach(pipe => {
-    // TOP PIPE: Slice from bottom of image to prevent stretching
+    // Determine how much of the source image to show based on pipe height
+    // This prevents stretching the image
+    let topSourceHeight = (pipe.top / (canvas.height)) * pipeImg.height;
+    let bottomSourceHeight = (pipe.bottom / (canvas.height)) * pipeImg.height;
+
+    // TOP PIPE
     ctx.drawImage(
       pipeImg,
-      0, pipeImg.height - pipe.top, pipeImg.width, pipe.top, 
-      pipe.x, 0, pipe.width, pipe.top
+      0, pipeImg.height - topSourceHeight, pipeImg.width, topSourceHeight, // Source
+      pipe.x, 0, pipe.width, pipe.top                                     // Destination
     );
 
-    // BOTTOM PIPE: Slice from top of image
+    // BOTTOM PIPE
     ctx.drawImage(
       pipeImg,
-      0, 0, pipeImg.width, pipe.bottom, 
-      pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom
+      0, 0, pipeImg.width, bottomSourceHeight,                            // Source
+      pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom        // Destination
     );
 
     if (gameState === "playing") pipe.x -= pipeSpeed;
 
-    // Collision Detection
+    // Collision
     if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x &&
        (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)) {
       gameState = "gameover";
     }
 
-    // Scoring
+    // Score
     if (!pipe.passed && pipe.x + pipe.width < bird.x) {
       score++;
       pipe.passed = true;
@@ -211,7 +212,6 @@ function drawGameOver() {
   ctx.font = "16px Arial";
   ctx.fillText("hehehe inka pakkaki po", canvas.width / 2, popupY - 10);
 
-  // Button Position and Tap Logic
   retryButton.x = canvas.width / 2 - retryButton.width / 2;
   retryButton.y = popupY + popupH + 30;
   
@@ -259,16 +259,14 @@ function handleInput(event) {
       let rect = canvas.getBoundingClientRect();
       let clickX, clickY;
 
-      // Handle Touch and Mouse Coordinates correctly
       if (event.touches && event.touches.length > 0) {
         clickX = event.touches[0].clientX - rect.left;
         clickY = event.touches[0].clientY - rect.top;
       } else {
-        clickX = event.clientX - rect.left;
-        clickY = event.clientY - rect.top;
+        clickX = (event.clientX || 0) - rect.left;
+        clickY = (event.clientY || 0) - rect.top;
       }
 
-      // Check button click with 10px extra "padding" for mobile fingers
       if (clickX > retryButton.x - 10 && clickX < retryButton.x + retryButton.width + 10 &&
           clickY > retryButton.y - 10 && clickY < retryButton.y + retryButton.height + 10) {
         resetGame();
@@ -278,14 +276,14 @@ function handleInput(event) {
   }
 }
 
-// Listeners
 document.addEventListener("keydown", (e) => { if (e.code === "Space") handleInput(); });
 canvas.addEventListener("mousedown", (e) => { handleInput(e); });
 canvas.addEventListener("touchstart", (e) => { 
-  // Only prevent default if playing (prevents screen scrolling)
-  // Allow default during gameover so touch coordinates work better
-  if (gameState === "playing") e.preventDefault(); 
+  if (gameState !== "gameover") e.preventDefault(); 
   handleInput(e); 
 }, { passive: false });
 
-gameLoop();
+// Ensure pipeImg is loaded before starting the loop to avoid distortion
+pipeImg.onload = () => {
+  gameLoop();
+};
