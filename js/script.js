@@ -167,7 +167,7 @@ function drawStartScreen() {
   ctx.fillStyle = "black";
   ctx.font = "bold 36px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("Flappy-Jak", canvas.width / 2, canvas.height / 3);
+  ctx.fillText("JAK FLAPS", canvas.width / 2, canvas.height / 3);
   ctx.font = "18px Arial";
   ctx.fillText("Tap or Press Space to Start", canvas.width / 2, canvas.height / 2);
 }
