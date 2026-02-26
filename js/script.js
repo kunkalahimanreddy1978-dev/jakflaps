@@ -189,3 +189,96 @@ function drawGameOver() {
 
   if (!bounceBack) {
     gameOverScale += 0.08;
+    if (gameOverScale >= 1.1) bounceBack = true;
+  } else {
+    gameOverScale -= 0.05;
+    if (gameOverScale <= 1) gameOverScale = 1;
+  }
+
+  let popupW = canvas.width * 0.8 * gameOverScale;
+  let popupH = popupW * 0.65;
+  let popupX = canvas.width / 2 - popupW / 2;
+  let popupY = canvas.height / 2 - popupH / 2;
+
+  ctx.drawImage(gameOverImg, popupX, popupY, popupW, popupH);
+
+  ctx.fillStyle = "white";
+  ctx.font = "bold 26px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("GAME OVER", canvas.width / 2, popupY - 30);
+  ctx.fillStyle = "#ff4444";
+  ctx.font = "16px Arial";
+  ctx.fillText("hehehe inka pakkaki po", canvas.width / 2, popupY - 10);
+
+  retryButton.x = canvas.width / 2 - retryButton.width / 2;
+  retryButton.y = popupY + popupH + 30;
+  ctx.fillStyle = "#ffcc00";
+  ctx.fillRect(retryButton.x, retryButton.y, retryButton.width, retryButton.height);
+  ctx.fillStyle = "black";
+  ctx.font = "bold 20px Arial";
+  ctx.fillText("RETRY", canvas.width / 2, retryButton.y + 32);
+}
+
+// ================= MAIN LOOP =================
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (gameState === "start") {
+    drawStartScreen();
+  } else if (gameState === "playing") {
+    if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - pipeSpacing) {
+      createPipe();
+    }
+    if (frame % 300 === 0 && frame !== 0) pipeSpeed += 0.15;
+    updateBird();
+    drawPipes();
+    drawBird();
+    drawScore();
+    frame++;
+  } else if (gameState === "gameover") {
+    drawPipes();
+    drawBird();
+    drawGameOver();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// ================= INPUT HANDLER =================
+function handleInput(event) {
+  if (gameState === "start") {
+    gameState = "playing";
+  } else if (gameState === "playing") {
+    bird.velocity = bird.lift;
+    jumpSound.currentTime = 0;
+    jumpSound.play();
+  } else if (gameState === "gameover") {
+    if (event) {
+      let rect = canvas.getBoundingClientRect();
+      let clickX, clickY;
+
+      if (event.touches && event.touches.length > 0) {
+        clickX = event.touches[0].clientX - rect.left;
+        clickY = event.touches[0].clientY - rect.top;
+      } else {
+        clickX = event.clientX - rect.left;
+        clickY = event.clientY - rect.top;
+      }
+
+      if (clickX > retryButton.x && clickX < retryButton.x + retryButton.width &&
+          clickY > retryButton.y && clickY < retryButton.y + retryButton.height) {
+        resetGame();
+        gameState = "start";
+      }
+    }
+  }
+}
+
+// Listeners
+document.addEventListener("keydown", (e) => { if (e.code === "Space") handleInput(); });
+canvas.addEventListener("mousedown", (e) => { handleInput(e); });
+canvas.addEventListener("touchstart", (e) => { 
+  if (gameState !== "gameover") e.preventDefault(); 
+  handleInput(e); 
+}, { passive: false });
+
+gameLoop();
