@@ -24,7 +24,7 @@ const gameOverImg = new Image();
 gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "images/pipeimge.jpeg";
+pipeImg.src = "images/pipe.jpeg";
 
 // ================= LOAD SOUND =================
 const jumpSound = new Audio("sounds/jump.mp3");
@@ -119,25 +119,22 @@ function createPipe() {
   });
 }
 
+
+
 function drawPipes() {
   pipes.forEach(pipe => {
-    // Determine how much of the source image to show based on pipe height
-    // This prevents stretching the image
-    let topSourceHeight = (pipe.top / (canvas.height)) * pipeImg.height;
-    let bottomSourceHeight = (pipe.bottom / (canvas.height)) * pipeImg.height;
-
-    // TOP PIPE
+    // 1. TOP PIPE - Anchored at Y = 0
     ctx.drawImage(
       pipeImg,
-      0, pipeImg.height - topSourceHeight, pipeImg.width, topSourceHeight, // Source
-      pipe.x, 0, pipe.width, pipe.top                                     // Destination
+      0, pipeImg.height - pipe.top, pipeImg.width, pipe.top, 
+      pipe.x, 0, pipe.width, pipe.top
     );
 
-    // BOTTOM PIPE
+    // 2. BOTTOM PIPE - Anchored at the bottom edge
     ctx.drawImage(
       pipeImg,
-      0, 0, pipeImg.width, bottomSourceHeight,                            // Source
-      pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom        // Destination
+      0, 0, pipeImg.width, pipe.bottom, 
+      pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom
     );
 
     if (gameState === "playing") pipe.x -= pipeSpeed;
@@ -279,11 +276,9 @@ function handleInput(event) {
 document.addEventListener("keydown", (e) => { if (e.code === "Space") handleInput(); });
 canvas.addEventListener("mousedown", (e) => { handleInput(e); });
 canvas.addEventListener("touchstart", (e) => { 
-  if (gameState !== "gameover") e.preventDefault(); 
+  if (gameState === "playing") e.preventDefault(); 
   handleInput(e); 
 }, { passive: false });
 
-// Ensure pipeImg is loaded before starting the loop to avoid distortion
-pipeImg.onload = () => {
-  gameLoop();
-};
+// Start the game
+gameLoop();
