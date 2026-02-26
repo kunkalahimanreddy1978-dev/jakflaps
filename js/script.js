@@ -121,7 +121,7 @@ function createPipe() {
 
 function drawPipes() {
   pipes.forEach(pipe => {
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "yellow";
 
     // --- TOP PIPE ---
     // Start at 0, draw down to pipe.top

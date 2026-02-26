@@ -6,7 +6,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #1a1a1a; /* Your black strip color */
+    background-color: #000000; /* Your black strip color */
     overflow: hidden;
     font-family: Arial, sans-serif;
 }
@@ -23,7 +23,7 @@ body {
 }
 
 canvas {
-    background-color: yellow;
+    background-color: rgb(80, 1, 111);
     display: block;
     box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Makes the game edge look cleaner */
 }
