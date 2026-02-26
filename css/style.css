@@ -2,16 +2,28 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
+    flex-direction: column; /* Stack title and canvas */
     justify-content: center;
     align-items: center;
     height: 100vh;
-    /* Change 'yellow' to your preferred color here */
-    background-color: #1a1a1a; 
+    background-color: #1a1a1a; /* Your black strip color */
     overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#top-title {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 10px 0;
+    text-shadow: 2px 2px 0px #ff4444; /* Optional: adds a little "pop" */
+    position: absolute;
+    top: 20px; /* Adjust this to center it in your top black strip */
 }
 
 canvas {
-    /* This ensures the game itself stays yellow, while the bars change */
-    background-color: yellow; 
+    background-color: yellow;
     display: block;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5); /* Makes the game edge look cleaner */
 }

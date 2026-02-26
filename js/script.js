@@ -223,10 +223,14 @@ function drawGameOver() {
 // ================= MAIN LOOP =================
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   if (gameState === "start") {
-    drawStartScreen();
-  } else if (gameState === "playing") {
+    // We removed the big "Flappy-Jak" text here because it's now in the HTML title
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.font = "bold 18px Arial";
+    ctx.fillText("Tap to Start", canvas.width / 2, canvas.height / 2);
+}
+  else if (gameState === "playing") {
     if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - pipeSpacing) {
       createPipe();
     }
