@@ -1,8 +1,17 @@
 body {
-  margin: 0;
-  background: #FFFF00;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    /* Change 'yellow' to your preferred color here */
+    background-color: #1a1a1a; 
+    overflow: hidden;
+}
+
+canvas {
+    /* This ensures the game itself stays yellow, while the bars change */
+    background-color: yellow; 
+    display: block;
 }
