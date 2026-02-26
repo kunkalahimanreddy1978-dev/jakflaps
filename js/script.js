@@ -24,7 +24,7 @@ const gameOverImg = new Image();
 gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "images/pipe.jpeg";
+pipeImg.src = "images/pipe.jpeg"; // This is now your square "cap"
 
 // ================= LOAD SOUND =================
 const jumpSound = new Audio("sounds/jump.mp3");
@@ -119,23 +119,21 @@ function createPipe() {
   });
 }
 
-
-
 function drawPipes() {
   pipes.forEach(pipe => {
-    // 1. TOP PIPE - Anchored at Y = 0
-    ctx.drawImage(
-      pipeImg,
-      0, pipeImg.height - pipe.top, pipeImg.width, pipe.top, 
-      pipe.x, 0, pipe.width, pipe.top
-    );
+    ctx.fillStyle = "black";
 
-    // 2. BOTTOM PIPE - Anchored at the bottom edge
-    ctx.drawImage(
-      pipeImg,
-      0, 0, pipeImg.width, pipe.bottom, 
-      pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom
-    );
+    // --- TOP PIPE ---
+    // Draw solid black part
+    ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+    // Draw square image at the BOTTOM of the top pipe
+    ctx.drawImage(pipeImg, pipe.x, pipe.top - pipe.width, pipe.width, pipe.width);
+
+    // --- BOTTOM PIPE ---
+    // Draw solid black part
+    ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
+    // Draw square image at the TOP of the bottom pipe
+    ctx.drawImage(pipeImg, pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.width);
 
     if (gameState === "playing") pipe.x -= pipeSpeed;
 
@@ -280,5 +278,4 @@ canvas.addEventListener("touchstart", (e) => {
   handleInput(e); 
 }, { passive: false });
 
-// Start the game
 gameLoop();
