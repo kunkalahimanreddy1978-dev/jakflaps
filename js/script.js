@@ -24,7 +24,7 @@ const gameOverImg = new Image();
 gameOverImg.src = "images/gameover.jpeg";
 
 const pipeImg = new Image();
-pipeImg.src = "images/pipe.jpeg";
+pipeImg.src = "images/pipeimge.jpeg";
 
 // ================= LOAD SOUND =================
 const jumpSound = new Audio("sounds/jump.mp3");
