@@ -55,21 +55,21 @@ function resizeCanvas() {
     canvas.height = w / ratio;
   }
 
-  // Set dynamic sizes
+  // Set dynamic sizes relative to screen height
   bird.width = canvas.height * 0.07;
   bird.height = bird.width;
-  bird.x = canvas.width * 0.15; // Position bird 15% from left
+  bird.x = canvas.width * 0.15; 
   
   gap = canvas.height * 0.24;
   pipeSpacing = canvas.width * 0.75;
 
+  // Make button large enough for thumbs
   retryButton.width = canvas.width * 0.5;
-  retryButton.height = 50;
+  retryButton.height = 55;
 
   if (gameState === "start") bird.y = canvas.height / 2;
 }
 
-// Initialize scale
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
@@ -100,12 +100,10 @@ function updateBird() {
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
 
-  // Ground collision
   if (bird.y + bird.height > canvas.height) {
     bird.y = canvas.height - bird.height;
     gameState = "gameover";
   }
-  // Ceiling
   if (bird.y < 0) bird.y = 0;
 }
 
@@ -123,16 +121,18 @@ function createPipe() {
   });
 }
 
+
+
 function drawPipes() {
   pipes.forEach(pipe => {
-    // Top Pipe Clipping Logic
+    // TOP PIPE: Slice from bottom of image to prevent stretching
     ctx.drawImage(
       pipeImg,
       0, pipeImg.height - pipe.top, pipeImg.width, pipe.top, 
       pipe.x, 0, pipe.width, pipe.top
     );
 
-    // Bottom Pipe Clipping Logic
+    // BOTTOM PIPE: Slice from top of image
     ctx.drawImage(
       pipeImg,
       0, 0, pipeImg.width, pipe.bottom, 
@@ -206,17 +206,20 @@ function drawGameOver() {
   ctx.font = "bold 26px Arial";
   ctx.textAlign = "center";
   ctx.fillText("GAME OVER", canvas.width / 2, popupY - 30);
+  
   ctx.fillStyle = "#ff4444";
   ctx.font = "16px Arial";
   ctx.fillText("hehehe inka pakkaki po", canvas.width / 2, popupY - 10);
 
+  // Button Position and Tap Logic
   retryButton.x = canvas.width / 2 - retryButton.width / 2;
   retryButton.y = popupY + popupH + 30;
+  
   ctx.fillStyle = "#ffcc00";
   ctx.fillRect(retryButton.x, retryButton.y, retryButton.width, retryButton.height);
   ctx.fillStyle = "black";
   ctx.font = "bold 20px Arial";
-  ctx.fillText("RETRY", canvas.width / 2, retryButton.y + 32);
+  ctx.fillText("RETRY", canvas.width / 2, retryButton.y + 35);
 }
 
 // ================= MAIN LOOP =================
@@ -256,6 +259,7 @@ function handleInput(event) {
       let rect = canvas.getBoundingClientRect();
       let clickX, clickY;
 
+      // Handle Touch and Mouse Coordinates correctly
       if (event.touches && event.touches.length > 0) {
         clickX = event.touches[0].clientX - rect.left;
         clickY = event.touches[0].clientY - rect.top;
@@ -264,8 +268,9 @@ function handleInput(event) {
         clickY = event.clientY - rect.top;
       }
 
-      if (clickX > retryButton.x && clickX < retryButton.x + retryButton.width &&
-          clickY > retryButton.y && clickY < retryButton.y + retryButton.height) {
+      // Check button click with 10px extra "padding" for mobile fingers
+      if (clickX > retryButton.x - 10 && clickX < retryButton.x + retryButton.width + 10 &&
+          clickY > retryButton.y - 10 && clickY < retryButton.y + retryButton.height + 10) {
         resetGame();
         gameState = "start";
       }
@@ -277,7 +282,9 @@ function handleInput(event) {
 document.addEventListener("keydown", (e) => { if (e.code === "Space") handleInput(); });
 canvas.addEventListener("mousedown", (e) => { handleInput(e); });
 canvas.addEventListener("touchstart", (e) => { 
-  if (gameState !== "gameover") e.preventDefault(); 
+  // Only prevent default if playing (prevents screen scrolling)
+  // Allow default during gameover so touch coordinates work better
+  if (gameState === "playing") e.preventDefault(); 
   handleInput(e); 
 }, { passive: false });
 
