@@ -208,7 +208,7 @@ function drawGameOver() {
   
   ctx.fillStyle = "#ff4444";
   ctx.font = "16px Arial";
-  ctx.fillText("hehehe inka pakkaki po", canvas.width / 2, popupY - 10);
+  ctx.fillText("poyi chaduvuko inka", canvas.width / 2, popupY - 10);
 
   retryButton.x = canvas.width / 2 - retryButton.width / 2;
   retryButton.y = popupY + popupH + 30;
